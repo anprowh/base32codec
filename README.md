@@ -37,4 +37,4 @@ If you want to run programs from command line here is a guide:
 * Encode file to Base32 with "save file" dialog: `.\base32save.exe <input_file>`
 * Decode file from Base32 with "save file" dialog: `.\base32save.exe <input_file> -d`
 
-Note that when using `base32codec.exe` you will not see output if program was compiled with `-mwindows`.
+Note that when using `base32codec.exe` you will not see output in console if program was compiled with `-mwindows`.
