@@ -8,6 +8,8 @@
 #include "util.h"
 #include "base32buffer.h"
 
+// Chunk size must be divisible by 5 to prevent corruption on data "seams"
+// on chunk edges. Data is processed in 5 bits per iteration during encoding.
 #define CHUNK_SIZE 16*1020
 #define BASE32_CHUNK_SIZE ((CHUNK_SIZE * 8) + 4) / 5
 
@@ -20,8 +22,6 @@ int decode_file(FILE* fin, FILE* fout) {
         printf("Output file is NULL. Unable to write to NULL.\n");
         return -1;
     }
-    size_t chunk_size = CHUNK_SIZE;
-    size_t base32_chunk_size = get_base32_size(chunk_size);
     char buffer[CHUNK_SIZE];
     if (buffer == NULL) {
         printf("Unable to allocate memory for writing decoded chunks.\n");
@@ -33,29 +33,27 @@ int decode_file(FILE* fin, FILE* fout) {
         free(buffer);
         return -2;
     }
-    size_t bytes_read = base32_chunk_size;
-    size_t bytes_wrote = 0;  // To calculate padding in the end
+    size_t bytes_read = BASE32_CHUNK_SIZE;
     size_t bytes_decoded;
 
-    while (bytes_read == base32_chunk_size) {
-        // printf("Reading %llu bytes", base32_chunk_size);
-        bytes_read = fread(base32_buffer, 1, base32_chunk_size, fin);
-        // printf("Read %llu bytes", bytes_read);
+    while (bytes_read == BASE32_CHUNK_SIZE) {
+        bytes_read = fread(base32_buffer, 1, BASE32_CHUNK_SIZE, fin);
         if (ferror(fin)) {
             printf("Error reading from file.\n");
             printf("Error: %s\n", strerror(errno));
             return -3;
         }
-        // In case number of bytes is divisible by chunk size (empty chunk)
+        // In case total number of bytes is divisible by chunk size (empty chunk)
         if (bytes_read == 0) {
             break;
         }
+        // Empty buffer will not be passed
         bytes_decoded = decode_base32(base32_buffer, bytes_read, buffer);
         if (bytes_decoded == 0) {
             printf("Error decoding chunk.\n");
             return -4;
         }
-        bytes_wrote += fwrite(buffer, 1, bytes_decoded, fout);
+        fwrite(buffer, 1, bytes_decoded, fout);
         if (ferror(fout)) {
             printf("Error writing to file.\n");
             printf("Error: %s\n", strerror(errno));
@@ -75,8 +73,6 @@ int encode_file(FILE* fin, FILE* fout) {
         printf("Output file is NULL. Unable to write to NULL.\n");
         return -1;
     }
-    size_t chunk_size = CHUNK_SIZE;
-    size_t base32_chunk_size = get_base32_size(chunk_size);
     char buffer[CHUNK_SIZE];
     if (buffer == NULL) {
         printf("Unable to allocate memory for reading chunks.\n");
@@ -88,11 +84,11 @@ int encode_file(FILE* fin, FILE* fout) {
         free(buffer);
         return -2;
     }
-    size_t bytes_read = chunk_size;
+    size_t bytes_read = CHUNK_SIZE;
     size_t bytes_wrote = 0;  // To calculate padding in the end
     size_t bytes_encoded;
-    while (bytes_read == chunk_size) {
-        bytes_read = fread(buffer, 1, chunk_size, fin);
+    while (bytes_read == CHUNK_SIZE) {
+        bytes_read = fread(buffer, 1, CHUNK_SIZE, fin);
         if (ferror(fin)) {
             printf("Error reading from file.\n");
             printf("Error: %s\n", strerror(errno));

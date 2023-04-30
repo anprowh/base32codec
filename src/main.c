@@ -9,7 +9,9 @@
 #include "base32file.h"
 
 int main(int argc, char** argv1) {
+    // Needed to handle non ascii characters
     wchar_t** argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+    
     // Handle arguments
     if (argc >= 2 && (wcscmp(argv[1], L"-h") == 0 ||
                     wcscmp(argv[1], L"--help") == 0)) {

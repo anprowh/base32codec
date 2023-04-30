@@ -5,7 +5,6 @@
 #include "util.h"
 
 #define BASE32_CHARS "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
-#define BASE32_PAD_CHAR '='
 #define LOWERCASE_ALPHABET "abcdefghijklmnopqrstuvwxyz"
 #define LOWERCASE_ALPHABET_SIZE 26
 // Check if alphabet (A,B,C) have sequential encoded representation
@@ -85,6 +84,7 @@ size_t encode_base32(const char* data, size_t data_size, char* result) {
                 continue;
             }
             buffer <<= 8;
+            // applying mask using & to ensure no extra bits are added
             buffer &= 0xFFFFFF00;
             buffer |= data[input_idx] & 0x000000FF;
             bits_remaining += 8;
